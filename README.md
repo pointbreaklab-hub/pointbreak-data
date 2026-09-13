@@ -50,3 +50,20 @@ No candidate names against applications. No message contents in plaintext. No
 metrics a company wrote about itself: every number feeding a Ghost Score is
 derived from the ledger below, and a company claim counts only once the
 candidate it names confirms it.
+
+## The index
+
+`index/network.json` bundles every job, event and company into one file, rebuilt
+by a workflow whenever the ledger changes.
+
+It exists because the client is a static page. Reading this repository file by
+file would cost one request per job plus one per event, which is fine at ten
+postings and impossible at a thousand, and it would exhaust GitHub's
+unauthenticated rate limit for anyone who has not signed in. One file from
+`raw.githubusercontent.com` costs one request, needs no token, and is cached by
+the CDN.
+
+It carries raw records and never computed scores. Scoring stays in the browser
+so anyone can check the arithmetic, and changing the algorithm does not require
+rebuilding this. The index is a cache for fetch efficiency; the ledger is the
+source of truth. Delete it and clients fall back to walking the directories.

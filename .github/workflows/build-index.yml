@@ -1,0 +1,44 @@
+name: Build network index
+
+on:
+  push:
+    branches: [main]
+    # Rebuilding on a change to the index itself would loop forever.
+    paths:
+      - 'jobs/**'
+      - 'events/**'
+      - 'companies/**'
+      - 'scripts/build-index.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-index
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: node scripts/build-index.mjs
+
+      - name: Commit the index if it changed
+        run: |
+          git config user.name "pointbreak-indexer"
+          git config user.email "indexer@users.noreply.github.com"
+          git add index/network.json
+          # generated_at changes every run, so compare everything else.
+          if git diff --cached --quiet; then
+            echo "index unchanged"
+          else
+            git commit -m "Rebuild network index"
+            git push
+          fi
